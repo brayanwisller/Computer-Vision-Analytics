@@ -88,7 +88,7 @@ def calibrar_cor(titulo_janela: str, roi_imagem: np.ndarray, num_filtro: int) ->
         
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--img", default="grass.jpg", help="Caminho da imagem")
+    parser.add_argument("--img", default="grass_img.jpg", help="Caminho da imagem")
     args = parser.parse_args()
     img = cv2.imread(args.img)
 
