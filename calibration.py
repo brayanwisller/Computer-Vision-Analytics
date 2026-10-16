@@ -100,11 +100,11 @@ def main():
     imagem_nitida = cv2.addWeighted(img, 1.5, imagem_blur, -0.5, 0)
 
     filtro_dict = {
-        1: {"text_cor_boa": "Calibrar cor boa com filtro Morphology", "text_cor_ruim": "Calibrar cor ruim com filtro Morphology", "imagem_analisada": img},
-        2: {"text_cor_boa": "Calibrar cor boa com filtro Erosion", "text_cor_ruim": "Calibrar cor ruim com filtro Erosion", "imagem_analisada": img},
-        3: {"text_cor_boa": "Calibrar cor boa com filtro Blur", "text_cor_ruim": "Calibrar cor ruim com filtro Blur", "imagem_analisada": imagem_blur},
-        4: {"text_cor_boa": "Calibrar cor boa com filtro Unsharping Mask", "text_cor_ruim": "Calibrar cor ruim com filtro Unsharping Mask", "imagem_analisada": imagem_nitida},
-        5: {"text_cor_boa": "Calibrar cor boa sem filtro", "text_cor_ruim": "Calibrar cor ruim sem filtro", "imagem_analisada": img}
+        1: {"text_cor_boa": "Calibrar cor boa com filtro Morphology", "text_cor_ruim": "Calibrar cor ruim com filtro Morphology", "imagem_analisada": img, "filtro": "Morphology"},
+        2: {"text_cor_boa": "Calibrar cor boa com filtro Erosion", "text_cor_ruim": "Calibrar cor ruim com filtro Erosion", "imagem_analisada": img, "filtro": "Erosion"},
+        3: {"text_cor_boa": "Calibrar cor boa com filtro Blur", "text_cor_ruim": "Calibrar cor ruim com filtro Blur", "imagem_analisada": imagem_blur, "filtro": "Blur"},
+        4: {"text_cor_boa": "Calibrar cor boa com filtro Unsharping Mask", "text_cor_ruim": "Calibrar cor ruim com filtro Unsharping Mask", "imagem_analisada": imagem_nitida, "filtro": "Unsharping Mask"},
+        5: {"text_cor_boa": "Calibrar cor boa sem filtro", "text_cor_ruim": "Calibrar cor ruim sem filtro", "imagem_analisada": img, "filtro": "No filter"}
     }
 
     numero_selecionado = criar_menus(filtro_dict)
@@ -125,6 +125,7 @@ def main():
     text_cor_boa = filtro_dict[numero_selecionado]["text_cor_boa"]
     text_cor_ruim = filtro_dict[numero_selecionado]["text_cor_ruim"]
     imagem_analisada = filtro_dict[numero_selecionado]["imagem_analisada"]
+    filtro_utilizado = filtro_dict[numero_selecionado]["filtro"]
 
     print("Iniciando verificação da imagem...")
     roi_box = cv2.selectROI("Selecione a área de leitura", imagem_analisada, fromCenter=False)
@@ -146,7 +147,8 @@ def main():
         config = {
             "roi": {"x": int(x), "y": int(y), "w": int(w), "h": int(h)},
             "cor_boa": {"lower_good": cor_boa_lower, "upper_good": cor_boa_upper},
-            "cor_ruim": {"lower_bad": cor_ruim_lower, "upper_bad": cor_ruim_upper}
+            "cor_ruim": {"lower_bad": cor_ruim_lower, "upper_bad": cor_ruim_upper},
+            "imagem_analisada": {"filtro": filtro_utilizado}
         }
 
         with open('config_img.json', 'w') as arquivo:
