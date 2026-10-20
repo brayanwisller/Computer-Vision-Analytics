@@ -6,88 +6,87 @@ import os
 from pathlib import Path
 import argparse
 
-def status_porcentagem(porcentagem: float) -> tuple:
-    if porcentagem >= 80:
-        cor_status = (0, 255, 0)
-    elif porcentagem < 80 and porcentagem >= 50:
-        cor_status = (255, 255, 0)
+def stats_percent(percent: float) -> tuple:
+    if percent >= 80:
+        stats_color = (0, 255, 0)
+    elif percent < 80 and percent >= 50:
+        stats_color = (255, 255, 0)
     else:
-        cor_status = (0, 0, 255)
+        stats_color = (0, 0, 255)
 
-    return cor_status
+    return stats_color
 
-def criar_gauge_dinamica(imagem_jpg: np.ndarray, porcentagem: float, x=20, y=20, largura=230, altura=55):
-    porcentagem = max(0.0, min(100.0, porcentagem))
+def make_gauge(image_jpg: np.ndarray, percent: float, x=20, y=20, width=230, height=55) -> None:
+    percent = max(0.0, min(100.0, percent))
 
-    cv2.rectangle(imagem_jpg, (x, y), (x + largura, y + altura), (25, 25, 25), -1)
-    cv2.rectangle(imagem_jpg, (x, y), (x + largura, y + altura), (80, 80, 80), 1)
+    cv2.rectangle(image_jpg, (x, y), (x + width, y + height), (25, 25, 25), -1)
+    cv2.rectangle(image_jpg, (x, y), (x + width, y + height), (80, 80, 80), 1)
 
     bar_x = x + 12
     bar_y = y + 28
-    bar_w = largura - 24
+    bar_w = width - 24
     bar_h = 14
 
     for i in range(bar_w):
         ratio = i / float(bar_w)
 
         if ratio < 0.5:
-            fator = ratio / 0.5
-            b, g, r = 0, int(255 * fator), 255
+            factor = ratio / 0.5
+            b, g, r = 0, int(255 * factor), 255
         else:
-            fator = (ratio - 0.5) / 0.5
-            b, g, r = 0, 255, int(255 * (1.0 - fator))
+            factor = (ratio - 0.5) / 0.5
+            b, g, r = 0, 255, int(255 * (1.0 - factor))
 
-        cv2.line(imagem_jpg, (bar_x + i, bar_y), (bar_x + i,  bar_y + bar_h), (b, g, r), 1)
+        cv2.line(image_jpg, (bar_x + i, bar_y), (bar_x + i,  bar_y + bar_h), (b, g, r), 1)
 
-    cv2.rectangle(imagem_jpg, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (200, 200, 200), 1)
+    cv2.rectangle(image_jpg, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (200, 200, 200), 2)
 
-    ponteiro_x = bar_x + int((porcentagem / 100.0) * bar_w)
+    pointer_x = bar_x + int((percent / 100.0) * bar_w)
 
-    ponteiros = np.array([
-        [ponteiro_x, bar_y - 2],
-        [ponteiro_x - 5, bar_y - 8],
-        [ponteiro_x + 5, bar_y - 8]
+    pointers = np.array([
+        [pointer_x, bar_y - 2],
+        [pointer_x - 5, bar_y - 8],
+        [pointer_x + 5, bar_y - 8]
     ], np.int32)
 
-    cv2.drawContours(imagem_jpg, [ponteiros], 0, (255, 255, 255), -1)
-    cv2.drawContours(imagem_jpg, [ponteiros], 0, (0, 0, 0), 1)
+    cv2.drawContours(image_jpg, [pointers], 0, (255, 255, 255), -1)
+    cv2.drawContours(image_jpg, [pointers], 0, (0, 0, 0), 1)
 
-    cv2.line(imagem_jpg, (ponteiro_x, bar_y), (ponteiro_x, bar_y + bar_h), (255, 255, 255), 2)
+    cv2.line(image_jpg, (pointer_x, bar_y), (pointer_x, bar_y + bar_h), (255, 255, 255), 2)
 
-    cor_status = status_porcentagem(porcentagem)
-    texto = f"Qualidade: {porcentagem:.2f}%"
-    cv2.putText(imagem_jpg, texto, (x + 12, y + 18), cv2.FONT_HERSHEY_COMPLEX, 0.45, (255, 255, 255), 1)
+    stats_color = stats_percent(percent)
+    text = f"Quality: {percent:.2f}%"
+    cv2.putText(image_jpg, text, (x + 12, y + 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 0)
 
+def process_image(image_jpg: np.ndarray, data_config: tuple) -> np.ndarray:
+    x, y, w, h = data_config['roi']['x'], data_config['roi']['y'], data_config['roi']['w'], data_config['roi']['h']
+    good_lower = np.array(data_config['cor_boa']['lower_good'])
+    good_upper = np.array(data_config['cor_boa']['upper_good'])
+    bad_lower = np.array(data_config['cor_ruim']['lower_bad'])
+    bad_upper = np.array(data_config['cor_ruim']['upper_bad'])
 
-def processar_imagem(imagem_jpg: np.ndarray, dados_config: tuple) -> np.ndarray:
-    x, y, w, h = dados_config['roi']['x'], dados_config['roi']['y'], dados_config['roi']['w'], dados_config['roi']['h']
-    boa_lower = np.array(dados_config['cor_boa']['lower_good'])
-    boa_upper = np.array(dados_config['cor_boa']['upper_good'])
-    ruim_lower = np.array(dados_config['cor_ruim']['lower_bad'])
-    ruim_upper = np.array(dados_config['cor_ruim']['upper_bad'])
+    select_filter = data_config['imagem_analisada']['filtro']
 
-    filtro_escolhido = dados_config['imagem_analisada']['filtro']
-
-    roi = imagem_jpg[y: y + h, x: x + w]
+    roi = image_jpg[y: y + h, x: x + w]
     roi_blur = cv2.GaussianBlur(roi, (5, 5), 0)
     roi_unsharping = cv2.addWeighted(roi, 1.5, roi_blur, -0.5, 0)
 
-    if filtro_escolhido == "Blur":
+    if select_filter == "Blur":
         hsv = cv2.cvtColor(roi_blur, cv2.COLOR_BGR2HSV)
         print("hsv = blur")
-    if filtro_escolhido == "Unsharping Mask":
+    if select_filter == "Unsharping Mask":
         hsv = cv2.cvtColor(roi_unsharping, cv2.COLOR_BGR2HSV)
         print("hsv = unsharping mask")
     else:
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
         print("hsv = no filter")
 
-    mask_good = cv2.inRange(hsv, boa_lower, boa_upper)
-    mask_bad = cv2.inRange(hsv, ruim_lower, ruim_upper)
+    mask_good = cv2.inRange(hsv, good_lower, good_upper)
+    mask_bad = cv2.inRange(hsv, bad_lower, bad_upper)
 
     kernel = np.ones((5, 5), np.uint8)
 
-    if filtro_escolhido == "Morphology":
+    if select_filter == "Morphology":
         mask_apply_good = cv2.morphologyEx(mask_good, cv2.MORPH_OPEN, kernel)
         mask_apply_good = cv2.morphologyEx(mask_apply_good, cv2.MORPH_CLOSE, kernel)
 
@@ -95,7 +94,7 @@ def processar_imagem(imagem_jpg: np.ndarray, dados_config: tuple) -> np.ndarray:
         mask_apply_bad = cv2.morphologyEx(mask_apply_bad, cv2.MORPH_CLOSE, kernel)
 
         print("mask = morphology\n")
-    elif filtro_escolhido == "Erosion":
+    elif select_filter == "Erosion":
         mask_apply_good = cv2.erode(mask_good, kernel, iterations=1)
 
         mask_apply_bad = cv2.erode(mask_bad, kernel, iterations=1)
@@ -108,56 +107,55 @@ def processar_imagem(imagem_jpg: np.ndarray, dados_config: tuple) -> np.ndarray:
 
         print("mask = no filter\n")
 
-    pixels_bons = cv2.countNonZero(mask_apply_good)
-    pixels_ruins = cv2.countNonZero(mask_apply_bad)
-    total_analisado = pixels_bons + pixels_ruins
+    good_pixels = cv2.countNonZero(mask_apply_good)
+    bad_pixels = cv2.countNonZero(mask_apply_bad)
+    all_pixels = good_pixels + bad_pixels
 
-    print(f"Pixels bons: {pixels_bons}\n")
-    print(f"Pixels ruins: {pixels_ruins}\n")
-    print(f"Total Pixels: {total_analisado}\n")
+    print(f"Good pixels: {good_pixels}\n")
+    print(f"Bad pixels: {bad_pixels}\n")
+    print(f"All pixels (sum): {all_pixels}\n")
 
-    status = "Aguardando..."
-    cor_texto = (200, 200, 200)
+    stats = "Waiting..."
+    text_color = (200, 200, 200)
 
-    if total_analisado > 100:
-        porcentagem_total = (pixels_bons / total_analisado) * 100
+    if all_pixels > 100:
+        percent_amount = (good_pixels / all_pixels) * 100
 
-        print("----- Resultados -----")
+        print("----- Results -----")
 
-        print(f"Porcentagem: {porcentagem_total:.2f}%\n")
+        print(f"Percent: {percent_amount:.2f}%\n")
     else:
-        print("Não há pixels suficientes analisados.\n")
+        print("Don't have enough analyzed pixels.\n")
 
-    criar_gauge_dinamica(imagem_jpg, porcentagem_total)
-    cv2.rectangle(imagem_jpg, (x, y), (x+w, y+h), (0, 255, 0), 2)
-    cv2.putText(imagem_jpg, f"ROI", (x + 65, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (255, 255, 255), 2)
+    make_gauge(image_jpg, percent_amount)
+    cv2.rectangle(image_jpg, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
-    return imagem_jpg
+    return image_jpg
     
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--img", default="grass_img.jpg", help="Caminho da imagem")
+    parser.add_argument("--img", default="grass_img.jpg", help="Path to the image")
     args = parser.parse_args()
-    imagem_jpg = cv2.imread(args.img)
+    image_jpg = cv2.imread(args.img)
 
-    if imagem_jpg is None:
-        print("Erro ao carregar imagem.\n")
+    if image_jpg is None:
+        print("Error in loading image.\n")
         exit()
 
     try:
         with open('config_img.json', 'r') as arq:
-            dados_config = json.load(arq)
+            data_config = json.load(arq)
     except FileNotFoundError:
-        print("Erro: Arquivo 'config_img.json' não encontrado.\n")
+        print("Error: File 'config_img.json' not found.\n")
         exit()
 
     try:
         while True:
-            frame_analisado = processar_imagem(imagem_jpg, dados_config)
-            cv2.imshow('Imagem Original', imagem_jpg)
-            cv2.imshow('Imagem Analisada', frame_analisado)
+            analyzed_frame = process_image(image_jpg, data_config)
+            cv2.imshow('Original Image', image_jpg)
+            cv2.imshow('Analyzed Image', analyzed_frame)
 
-            print("Pressione 'Esc' para sair da tela de monitoramento.\n")
+            print("Press 'Esc' for exit in the window.\n")
             if cv2.waitKey(1) & 0xFF == 27:
                 break
 
