@@ -27,7 +27,7 @@ def read_trackbars(window_name: str) -> tuple:
     v_max = cv2.getTrackbarPos('V_max', window_name)
     return [h_min, s_min, v_min], [h_max, s_max, v_max]
     
-def create_menu(filter_dict: dict, attempts = 1, max_attempts = 3) -> int:
+def create_menu(filter_dict: dict, attempts=1, max_attempts=3) -> int:
     print("\nMenu:\n\n (9) Exit\n\n")
     print("Available filters:\n\n (1) Morphology\n (2) Erosion\n (3) Blur\n (4) Unsharping Mask\n (5) No filters\n\n")
 

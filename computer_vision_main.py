@@ -35,7 +35,7 @@ def stats_percent(percent: float) -> tuple:
 
     return stats_color
 
-def hud_selection_range(frame_shape: np.ndarray, roi_bbox: tuple, hud_w=230, hud_h = 55, margin = 20) -> tuple | tuple:
+def hud_selection_range(frame_shape: np.ndarray, roi_bbox: tuple, hud_w=230, hud_h=55, margin=20) -> tuple | tuple:
     height_frame, width_frame = frame_shape[:2]
     rx, ry, rw, rh = roi_bbox
 
@@ -59,7 +59,7 @@ def hud_selection_range(frame_shape: np.ndarray, roi_bbox: tuple, hud_w=230, hud
 
     return width_frame - hud_w - margin, margin
 
-def make_gauge(roi_bbox: tuple, image_jpg: np.ndarray, percent: float, width = 230, height = 55) -> None:
+def make_gauge(roi_bbox: tuple, image_jpg: np.ndarray, percent: float, width=230, height=55) -> None:
     x , y = hud_selection_range(image_jpg.shape, roi_bbox, hud_w=width, hud_h=height)
     percent = max(0.0, min(100.0, percent))
 
