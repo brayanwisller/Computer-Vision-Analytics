@@ -5,156 +5,156 @@ import sys
 from deepmerge import merge_or_raise
 import argparse
 
-def criar_trackbars(nome_janela: str):
-    cv2.namedWindow(nome_janela, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(nome_janela, 400, 250)
+def create_trackbars(window_name: str) -> None:
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, 400, 250)
 
     def nothing(x): pass
 
-    cv2.createTrackbar('H_min', nome_janela, 0, 179, nothing)
-    cv2.createTrackbar('S_min', nome_janela, 0, 255, nothing)
-    cv2.createTrackbar('V_min', nome_janela, 0, 255, nothing)
-    cv2.createTrackbar('H_max', nome_janela, 179, 179, nothing)
-    cv2.createTrackbar('S_max', nome_janela, 255, 255, nothing)
-    cv2.createTrackbar('V_max', nome_janela, 255, 255, nothing)
+    cv2.createTrackbar('H_min', window_name, 0, 179, nothing)
+    cv2.createTrackbar('S_min', window_name, 0, 255, nothing)
+    cv2.createTrackbar('V_min', window_name, 0, 255, nothing)
+    cv2.createTrackbar('H_max', window_name, 179, 179, nothing)
+    cv2.createTrackbar('S_max', window_name, 255, 255, nothing)
+    cv2.createTrackbar('V_max', window_name, 255, 255, nothing)
 
-def ler_trackbars(nome_janela: str) -> tuple:
-    h_min = cv2.getTrackbarPos('H_min', nome_janela)
-    s_min = cv2.getTrackbarPos('S_min', nome_janela)
-    v_min = cv2.getTrackbarPos('V_min', nome_janela)
-    h_max = cv2.getTrackbarPos('H_max', nome_janela)
-    s_max = cv2.getTrackbarPos('S_max', nome_janela)
-    v_max = cv2.getTrackbarPos('V_max', nome_janela)
+def read_trackbars(window_name: str) -> tuple:
+    h_min = cv2.getTrackbarPos('H_min', window_name)
+    s_min = cv2.getTrackbarPos('S_min', window_name)
+    v_min = cv2.getTrackbarPos('V_min', window_name)
+    h_max = cv2.getTrackbarPos('H_max', window_name)
+    s_max = cv2.getTrackbarPos('S_max', window_name)
+    v_max = cv2.getTrackbarPos('V_max', window_name)
     return [h_min, s_min, v_min], [h_max, s_max, v_max]
     
-def criar_menus(filtro_dict: dict, tentativas = 1, max_tentativas = 3) -> int:
-    print("\nMenu:\n\n (9) Sair\n\n")
-    print("Filtro disponíveis:\n\n (1) Morphology\n (2) Erosion\n (3) Blur\n (4) Unsharping Mask\n (5) No filters\n\n")
+def create_menu(filter_dict: dict, attempts = 1, max_attempts = 3) -> int:
+    print("\nMenu:\n\n (9) Exit\n\n")
+    print("Available filters:\n\n (1) Morphology\n (2) Erosion\n (3) Blur\n (4) Unsharping Mask\n (5) No filters\n\n")
 
-    while tentativas <= max_tentativas:
+    while attempts <= max_attempts:
         try:
-            numero_selecionado = int(input(f"[{tentativas}/{max_tentativas}] Selecione uma ação ou filtro que deseja aplicar: "))
-            print(f"\nAção/Filtro escolhido: {numero_selecionado}\n")
-            if numero_selecionado == 9:
-                print("\nEncerrando operação...\n")
+            select_number = int(input(f"[{attempts}/{max_attempts}] Select an action or filter: "))
+            print(f"\nAction/Filter selected: {select_number}\n")
+            if select_number == 9:
+                print("\nFinishing operation...\n")
                 sys.exit()
-            if numero_selecionado not in filtro_dict or not filtro_dict[numero_selecionado]:
-                print("Filtro não encontrado! Prosseguindo à próxima tentativa...\n")
-                tentativas += 1
+            if select_number not in filter_dict or not filter_dict[select_number]:
+                print("Filter not found! Trying again...\n")
+                attempts += 1
             else:
                 break
         except (TypeError, ValueError):
-            numero_selecionado = None
-            print("\nDigite um valor válido para selecionar a ação ou filtro desejado.\n")
-            tentativas += 1
+            select_number = None
+            print("\nEnter a valid value to select a desired action or filter.\n")
+            attempts += 1
 
-    if numero_selecionado not in filtro_dict or not filtro_dict[numero_selecionado]:
-        print(f"Filtro não encontrado após {max_tentativas} tentativas. Finalizando operação...\n")
+    if select_number not in filter_dict or not filter_dict[select_number]:
+        print(f"Filter not found after {max_attempts} attempts. Finishing operation...\n")
         sys.exit()
 
-    return numero_selecionado
+    return select_number
 
-def calibrar_cor(titulo_janela: str, roi_imagem: np.ndarray, num_filtro: int) -> tuple:
-    print(f"Ajuste os controles até o que for desejado ficar branco na janela {titulo_janela}.")
-    print("Pressione 'Esc' para sair da tela de edição...\n")
-    criar_trackbars('Controles')
+def color_calibration(window_name: str, roi_image: np.ndarray, num_filter: int) -> tuple:
+    print(f"Adjust the controls until the desired element turns white for {window_name}")
+    print("Press 'Esc' to exit the edit window.\n")
+    create_trackbars('Controls')
 
     while True:
-        hsv = cv2.cvtColor(roi_imagem, cv2.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(roi_image, cv2.COLOR_BGR2HSV)
 
-        lower_bound, upper_bound = ler_trackbars('Controles')
+        lower_bound, upper_bound = read_trackbars('Controls')
 
         mask = cv2.inRange(hsv, np.array(lower_bound), np.array(upper_bound))
 
         kernel = np.ones((5, 5), np.uint8)
 
-        if num_filtro == 1:
+        if num_filter == 1:
             mask_morfologia_open = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
             mask_apply = cv2.morphologyEx(mask_morfologia_open, cv2.MORPH_CLOSE, kernel)
-        elif num_filtro == 2:
+        elif num_filter == 2:
             mask_apply = cv2.erode(mask, kernel, iterations=1)
         else:
             mask_apply = mask
 
-        result = cv2.bitwise_and(roi_imagem, roi_imagem, mask=mask_apply)
+        result = cv2.bitwise_and(roi_image, roi_image, mask=mask_apply)
 
-        cv2.imshow(titulo_janela, mask_apply)
-        cv2.imshow('Imagem Original', result)
+        cv2.imshow(window_name, mask_apply)
+        cv2.imshow('Original Image', result)
             
         if cv2.waitKey(1) & 0xFF == 27:
-            cv2.destroyWindow(titulo_janela)
-            cv2.destroyWindow('Controles')
+            cv2.destroyWindow(window_name)
+            cv2.destroyWindow('Controls')
             return lower_bound, upper_bound
         
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--img", default="grass_img.jpg", help="Caminho da imagem")
+    parser.add_argument("--img", default="grass_img.jpg", help="Path to the image")
     args = parser.parse_args()
     img = cv2.imread(args.img)
 
     if img is None:
-        print("Erro ao carregar imagem ou imagem indisponível!")
+        print("Error in loading image!")
         sys.exit()
 
-    imagem_blur = cv2.GaussianBlur(img, (3, 3), 0)
-    imagem_nitida = cv2.addWeighted(img, 1.5, imagem_blur, -0.5, 0)
+    image_blur = cv2.GaussianBlur(img, (3, 3), 0)
+    image_unsharping = cv2.addWeighted(img, 1.5, image_blur, -0.5, 0)
 
-    filtro_dict = {
-        1: {"text_cor_boa": "Calibrar cor boa com filtro Morphology", "text_cor_ruim": "Calibrar cor ruim com filtro Morphology", "imagem_analisada": img, "filtro": "Morphology"},
-        2: {"text_cor_boa": "Calibrar cor boa com filtro Erosion", "text_cor_ruim": "Calibrar cor ruim com filtro Erosion", "imagem_analisada": img, "filtro": "Erosion"},
-        3: {"text_cor_boa": "Calibrar cor boa com filtro Blur", "text_cor_ruim": "Calibrar cor ruim com filtro Blur", "imagem_analisada": imagem_blur, "filtro": "Blur"},
-        4: {"text_cor_boa": "Calibrar cor boa com filtro Unsharping Mask", "text_cor_ruim": "Calibrar cor ruim com filtro Unsharping Mask", "imagem_analisada": imagem_nitida, "filtro": "Unsharping Mask"},
-        5: {"text_cor_boa": "Calibrar cor boa sem filtro", "text_cor_ruim": "Calibrar cor ruim sem filtro", "imagem_analisada": img, "filtro": "No filter"}
+    filter_dict = {
+        1: {"text_good_color": "Good color with Morphology filter", "text_bad_color": "Bad color with Morphology filter", "analyzed_img": img, "filter": "Morphology"},
+        2: {"text_good_color": "Good color with Erosion filter", "text_bad_color": "Bad color with Erosion filter", "analyzed_img": img, "filter": "Erosion"},
+        3: {"text_good_color": "Good color with Blur filter", "text_bad_color": "Bad color with Blur filter", "analyzed_img": image_blur, "filter": "Blur"},
+        4: {"text_good_color": "Good color with Unsharping Mask filter", "text_bad_color": "Bad color with Unsharping Mask filter", "analyzed_img": image_unsharping, "filter": "Unsharping Mask"},
+        5: {"text_good_color": "Good color without filter", "text_bad_color": "Bad color without filter", "analyzed_img": img, "filter": "No filter"}
     }
 
-    numero_selecionado = criar_menus(filtro_dict)
+    selected_number = create_menu(filter_dict)
 
     # frame_dict = {
-    #    1: {"imagem_analisada": img},
-    #    2: {"imagem_analisada": img},
-    #    3: {"imagem_analisada": imagem_blur},
-    #    4: {"imagem_analisada": imagem_nitida},
-    #    5: {"imagem_analisada": img}
+    #    1: {"analyzed_img": img},
+    #    2: {"analyzed_img": img},
+    #    3: {"analyzed_img": image_blur},
+    #    4: {"analyzed_img": image_unsharping},
+    #    5: {"analyzed_img": img}
     # }
 
     # try:
     #    result_dict = merge_or_raise.merge(filtro_dict, frame_dict)
     # except Exception as e:
-    #    print(f"Erro ao unificar dicionários: {e}")
+    #    print(f"Raise or merge error: {e}")
 
-    text_cor_boa = filtro_dict[numero_selecionado]["text_cor_boa"]
-    text_cor_ruim = filtro_dict[numero_selecionado]["text_cor_ruim"]
-    imagem_analisada = filtro_dict[numero_selecionado]["imagem_analisada"]
-    filtro_utilizado = filtro_dict[numero_selecionado]["filtro"]
+    text_good_color = filter_dict[selected_number]["text_good_color"]
+    text_bad_color = filter_dict[selected_number]["text_bad_color"]
+    analyzed_image = filter_dict[selected_number]["analyzed_img"]
+    used_filter = filter_dict[selected_number]["filter"]
 
-    print("Iniciando verificação da imagem...")
-    roi_box = cv2.selectROI("Selecione a área de leitura", imagem_analisada, fromCenter=False)
+    print("Starting image verification...")
+    roi_box = cv2.selectROI("Select the reading area", analyzed_image, fromCenter=False)
     x, y, w, h = roi_box
 
-    cv2.destroyWindow("Selecione a área de leitura")
+    cv2.destroyWindow("Select the reading area")
 
     if w > 0 and h > 0:
-        roi = imagem_analisada[y: y + h, x: x + w]
-        print(f"\nCoordenandas selecionadas para a ROI: roi = imagem [{y}: {y+h}, {x}: {x+w}]\n")
+        roi = analyzed_image[y: y + h, x: x + w]
+        print(f"\nROI((y: y + h), (x: x + w)): roi = image [{y}: {y+h}, {x}: {x+w}]\n")
     else:
-        roi = imagem_analisada
-        print("Nenhum recorte para a ROI")
+        roi = analyzed_image
+        print("No cut for the ROI")
 
     try:
-        cor_boa_lower, cor_boa_upper = calibrar_cor(text_cor_boa, roi, numero_selecionado)
-        cor_ruim_lower, cor_ruim_upper = calibrar_cor(text_cor_ruim, roi, numero_selecionado)
+        good_color_lower, good_color_upper = color_calibration(text_good_color, roi, selected_number)
+        bad_color_lower, bad_color_upper = color_calibration(text_bad_color, roi, selected_number)
         
-        config = {
+        settings = {
             "roi": {"x": int(x), "y": int(y), "w": int(w), "h": int(h)},
-            "cor_boa": {"lower_good": cor_boa_lower, "upper_good": cor_boa_upper},
-            "cor_ruim": {"lower_bad": cor_ruim_lower, "upper_bad": cor_ruim_upper},
-            "imagem_analisada": {"filtro": filtro_utilizado}
+            "good_color": {"lower_good": good_color_lower, "upper_good": good_color_upper},
+            "bad_color": {"lower_bad": bad_color_lower, "upper_bad": bad_color_upper},
+            "analyzed_image": {"filter": used_filter}
         }
 
-        with open('config_img.json', 'w') as arquivo:
-            json.dump(config, arquivo, indent=4)
+        with open('settings_img.json', 'w') as file:
+            json.dump(settings, file, indent=4)
 
-        print(f"\nSucesso! As configurações foram salvas no arquivo json.\n")
+        print(f"\nSuccess! The settings were saved to the JSON file.\n")
     finally:
         cv2.destroyAllWindows()
 

@@ -6,6 +6,25 @@ import os
 from pathlib import Path
 import argparse
 
+file_settings = 'settings_img.json'
+LAST_MODIFICATION = 0
+settings = {}
+
+def load_json(last_mod: float) -> dict | float:
+    if os.path.exists(file_settings):
+        time_mod_now = os.path.getmtime(file_settings)
+        if time_mod_now != last_mod:
+            try:
+                with open('settings_img.json', 'r') as f:
+                    data_settings = json.load(f)
+                print("File 'settings_img.json' was loaded with success.")
+                return data_settings, time_mod_now
+            except FileNotFoundError:
+                print("Error: File 'settings_img.json' not found.\n")
+                exit()
+
+    return settings, last_mod
+
 def stats_percent(percent: float) -> tuple:
     if percent >= 80:
         stats_color = (0, 255, 0)
@@ -16,7 +35,32 @@ def stats_percent(percent: float) -> tuple:
 
     return stats_color
 
-def make_gauge(image_jpg: np.ndarray, percent: float, x=20, y=20, width=230, height=55) -> None:
+def hud_selection_range(frame_shape: np.ndarray, roi_bbox: tuple, hud_w=230, hud_h = 55, margin = 20) -> tuple | tuple:
+    height_frame, width_frame = frame_shape[:2]
+    rx, ry, rw, rh = roi_bbox
+
+    rx1, ry1 = rx - margin, ry - margin
+    rx2, ry2 = rx + rw + margin, ry + rh + margin
+
+    possible_locals = [
+        (margin, margin),
+        (width_frame - hud_w - margin, margin),
+        (margin, height_frame - hud_h - margin),
+        (width_frame - hud_w - margin, height_frame - hud_h - margin)
+    ]
+
+    for hx, hy in possible_locals:
+        hx1, hy1 = hx, hy
+        hx2, hy2 = hx + hud_w, hy + hud_h
+
+        overlap = not (hx2 <= rx1 or hx1 >= rx2 or hy2 <= ry1 or hy1 >= ry2)
+        if not overlap:
+            return hx, hy
+
+    return width_frame - hud_w - margin, margin
+
+def make_gauge(roi_bbox: tuple, image_jpg: np.ndarray, percent: float, width = 230, height = 55) -> None:
+    x , y = hud_selection_range(image_jpg.shape, roi_bbox, hud_w=width, hud_h=height)
     percent = max(0.0, min(100.0, percent))
 
     cv2.rectangle(image_jpg, (x, y), (x + width, y + height), (25, 25, 25), -1)
@@ -52,20 +96,20 @@ def make_gauge(image_jpg: np.ndarray, percent: float, x=20, y=20, width=230, hei
     cv2.drawContours(image_jpg, [pointers], 0, (255, 255, 255), -1)
     cv2.drawContours(image_jpg, [pointers], 0, (0, 0, 0), 1)
 
-    cv2.line(image_jpg, (pointer_x, bar_y), (pointer_x, bar_y + bar_h), (255, 255, 255), 2)
+    cv2.line(image_jpg, (pointer_x, bar_y), (pointer_x, bar_y + bar_h), (255, 255, 255), 1)
 
     stats_color = stats_percent(percent)
     text = f"Quality: {percent:.2f}%"
-    cv2.putText(image_jpg, text, (x + 12, y + 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 0)
+    cv2.putText(image_jpg, text, (x + 12, y + 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-def process_image(image_jpg: np.ndarray, data_config: tuple) -> np.ndarray:
-    x, y, w, h = data_config['roi']['x'], data_config['roi']['y'], data_config['roi']['w'], data_config['roi']['h']
-    good_lower = np.array(data_config['cor_boa']['lower_good'])
-    good_upper = np.array(data_config['cor_boa']['upper_good'])
-    bad_lower = np.array(data_config['cor_ruim']['lower_bad'])
-    bad_upper = np.array(data_config['cor_ruim']['upper_bad'])
+def process_image(image_jpg: np.ndarray, data_settings: tuple) -> np.ndarray:
+    x, y, w, h = data_settings['roi']['x'], data_settings['roi']['y'], data_settings['roi']['w'], data_settings['roi']['h']
+    good_lower = np.array(data_settings['good_color']['lower_good'])
+    good_upper = np.array(data_settings['good_color']['upper_good'])
+    bad_lower = np.array(data_settings['bad_color']['lower_bad'])
+    bad_upper = np.array(data_settings['bad_color']['upper_bad'])
 
-    select_filter = data_config['imagem_analisada']['filtro']
+    select_filter = data_settings['analyzed_image']['filter']
 
     roi = image_jpg[y: y + h, x: x + w]
     roi_blur = cv2.GaussianBlur(roi, (5, 5), 0)
@@ -115,8 +159,7 @@ def process_image(image_jpg: np.ndarray, data_config: tuple) -> np.ndarray:
     print(f"Bad pixels: {bad_pixels}\n")
     print(f"All pixels (sum): {all_pixels}\n")
 
-    stats = "Waiting..."
-    text_color = (200, 200, 200)
+    text_color = (56, 255, 72)
 
     if all_pixels > 100:
         percent_amount = (good_pixels / all_pixels) * 100
@@ -127,8 +170,9 @@ def process_image(image_jpg: np.ndarray, data_config: tuple) -> np.ndarray:
     else:
         print("Don't have enough analyzed pixels.\n")
 
-    make_gauge(image_jpg, percent_amount)
-    cv2.rectangle(image_jpg, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    roi_bbox = (x, y, w, h)
+    make_gauge(roi_bbox, image_jpg, percent_amount)
+    cv2.rectangle(image_jpg, (x, y), (x+w, y+h), text_color, 2)
 
     return image_jpg
     
@@ -138,24 +182,20 @@ def main():
     args = parser.parse_args()
     image_jpg = cv2.imread(args.img)
 
+    settings, last_modification = load_json(LAST_MODIFICATION)
+
     if image_jpg is None:
         print("Error in loading image.\n")
         exit()
 
     try:
-        with open('config_img.json', 'r') as arq:
-            data_config = json.load(arq)
-    except FileNotFoundError:
-        print("Error: File 'config_img.json' not found.\n")
-        exit()
-
-    try:
         while True:
-            analyzed_frame = process_image(image_jpg, data_config)
+            settings, last_modification = load_json(LAST_MODIFICATION)
+            analyzed_frame = process_image(image_jpg, settings)
             cv2.imshow('Original Image', image_jpg)
             cv2.imshow('Analyzed Image', analyzed_frame)
 
-            print("Press 'Esc' for exit in the window.\n")
+            print("Press 'Esc' to exit in the window.\n")
             if cv2.waitKey(1) & 0xFF == 27:
                 break
 
