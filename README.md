@@ -43,7 +43,7 @@ Ensure you have the following installed on your system:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/Computer-Vision-Analytics.git
+git clone https://github.com/brayanwisller/Computer-Vision-Analytics.git
 cd Computer-Vision-Analytics
 ```
 
@@ -83,9 +83,9 @@ python computer_vision_main.py
 ## Contributing
 
 1. Fork the project
-2. Create your feature branch (`git checkout -b feature/NewFeature`)
+2. Create your feature branch (`git checkout -b feature/news`)
 3. Commit your changes (`git commit -m 'Add new feature'`)
-4. Push to the branch (`git push origin feature/NewFeature`)
+4. Push to the branch (`git push origin feature/news`)
 5. Open a Pull Request
 
 ## License
