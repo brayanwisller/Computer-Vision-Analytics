@@ -1,55 +1,53 @@
-# 👁️ Computer Vision Analytics
+# Computer Vision Analytics
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?logo=opencv&logoColor=white)
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?logo=numpy&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-> Ferramentas e scripts de análise em Visão Computacional focados no processamento e calibração de imagens utilizando Python e OpenCV.
+> Computer Vision analysis tools and scripts focused on image processing and calibration using Python and OpenCV.
 
-## 📑 Índice
+## Table of Contents
 
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Estrutura do Repositório](#-estrutura-do-repositório)
-- [Pré-requisitos](#-pré-requisitos)
-- [Instalação](#-instalação)
-- [Como Usar](#-como-usar)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+- [About the Project](#about-the-project)
+- [Repository Structure](#repository-structure)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
 
-## 📖 Sobre o Projeto
+## About the Project
 
-O **Computer Vision Analytics** é um projeto desenvolvido em Python para tarefas de visão computacional. Ele contém scripts modulares para o processamento principal e para a calibração de cores/espaços (como HSV), facilitando a extração de dados e análise de imagens (ex: segmentação de grama ou detecção de objetos baseada em cor).
+**Computer Vision Analytics** is a Python-based project designed for computer vision tasks. It provides modular scripts for core image processing and color/space calibration (e.g., HSV), facilitating data extraction, image analysis, and color-based object detection.
 
-## 📂 Estrutura do Repositório
-
-O projeto está organizado da seguinte forma:
+## Repository Structure
 
 ```text
 Computer-Vision-Analytics-main/
-├── calibration.py          # Script focado em calibração de imagens e máscaras (ex: calibração HSV)
-├── computer_vision_main.py # Script principal que executa a rotina de análise de visão computacional
-├── grass_img.jpg           # Imagem de amostra/teste utilizada nos scripts
-├── requirements.txt        # Dependências e bibliotecas do projeto (numpy, opencv-python, deepmerge)
-└── .gitignore              # Arquivos e diretórios ignorados pelo Git (ex: venv, vscode, testes locais)
+├── calibration.py          # Script focused on image and mask calibration (e.g., HSV calibration)
+├── computer_vision_main.py # Main script that executes the core computer vision routine
+├── grass_img.jpg           # Sample/test image used by the scripts
+├── requirements.txt        # Project dependencies (numpy, opencv-python, deepmerge)
+└── .gitignore              # Files and directories ignored by Git
 ```
 
-## ⚙️ Pré-requisitos
+## Prerequisites
 
-Antes de começar, certifique-se de ter o seguinte instalado em sua máquina:
+Ensure you have the following installed on your system:
 * [Python 3.8+](https://www.python.org/downloads/)
-* Pip (Gerenciador de pacotes do Python)
+* Pip (Python package installer)
 * Git
 
-## 🚀 Instalação
+## Installation
 
-1. Clone o repositório para a sua máquina local:
+1. Clone the repository:
 ```bash
-git clone https://github.com/SEU_USUARIO/Computer-Vision-Analytics.git
+git clone https://github.com/YOUR_USERNAME/Computer-Vision-Analytics.git
 cd Computer-Vision-Analytics
 ```
 
-2. (Opcional, mas recomendado) Crie e ative um ambiente virtual:
+2. (Optional) Create and activate a virtual environment:
 ```bash
 # Windows
 python -m venv venv
@@ -60,41 +58,36 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-3. Instale as dependências necessárias através do arquivo `requirements.txt`:
+3. Install the required dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-## 💻 Como Usar
+## Usage
 
-O repositório possui duas frentes principais de execução.
+The project offers two main execution paths:
 
-### 1. Calibração (HSV / Filtros)
-Para ajustar os parâmetros de visão computacional (como encontrar os valores corretos de cor em imagens), execute o script de calibração:
+### 1. Calibration
+To configure computer vision parameters (such as finding optimal color values), run the calibration script:
 ```bash
 python calibration.py
 ```
-*Dica: Utilize a imagem `grass_img.jpg` fornecida para testar os filtros e calibrações de verde/grama.*
+*Note: You can use the provided `grass_img.jpg` to test green/grass filters and calibrations.*
 
-### 2. Execução Principal
-Para rodar a análise de visão computacional completa com os parâmetros já estabelecidos, execute:
+### 2. Main Execution
+To run the complete computer vision analysis with the established parameters, execute:
 ```bash
 python computer_vision_main.py
 ```
 
-## 🤝 Contribuição
+## Contributing
 
-Contribuições são sempre bem-vindas! Se você tem alguma ideia para melhorar este projeto, siga os passos abaixo:
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/NewFeature`)
+3. Commit your changes (`git commit -m 'Add new feature'`)
+4. Push to the branch (`git push origin feature/NewFeature`)
+5. Open a Pull Request
 
-1. Faça um Fork do projeto
-2. Crie uma branch para a sua feature (`git checkout -b feature/MinhaFeatureIncrivel`)
-3. Faça o commit das suas alterações (`git commit -m 'Add: Minha nova feature'`)
-4. Faça o push para a branch (`git push origin feature/MinhaFeatureIncrivel`)
-5. Abra um Pull Request
+## License
 
-## 📝 Licença
-
-Este projeto é distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
----
-Feito com ❤️ pela comunidade de Visão Computacional.
+This project is licensed under the MIT License - see the `LICENSE` file for details.
